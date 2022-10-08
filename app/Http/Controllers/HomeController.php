@@ -22,6 +22,8 @@ use App\Models\Comment;
 
 use App\Models\Reply;
 
+use RealRashid\SweetAlert\Facades\Alert;
+
 
 class HomeController extends Controller
 {
@@ -132,7 +134,9 @@ class HomeController extends Controller
 
                 $cart->save();
 
-                return redirect()->back()->with('msg','Product Added Successfully');
+                Alert::success('Prodcut Added Successfully');
+
+                return redirect()->back();
 
             }
 
