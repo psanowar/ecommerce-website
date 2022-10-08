@@ -18,14 +18,22 @@ use Session;
 
 use Stripe;
 
+use App\Models\Comment;
+
+use App\Models\Reply;
+
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $product = Product::paginate(10);
+        $product = Product::paginate(9);
 
-        return view('home.userpage',compact('product'));
+        $comment = Comment::orderby('id','desc')->get();
+
+        $reply = Reply::all();
+
+        return view('home.userpage',compact('product','comment','reply'));
     }
 
 
@@ -64,13 +72,18 @@ class HomeController extends Controller
         }
         else {
 
-            $user_id  = Auth::id();
+            // $user_id  = Auth::id();
 
-            $count = cart::where('user_id',$user_id)->count();
+            // $count = cart::where('user_id',$user_id)->count();
 
-        $product = Product::paginate(10);
 
-        return view('home.userpage',compact('product'));
+            $product = Product::paginate(9);
+
+            $comment = Comment::orderby('id','desc')->get();
+
+            $reply = Reply::all();
+
+            return view('home.userpage',compact('product','comment','reply'));
         }
     }
 
@@ -91,42 +104,86 @@ class HomeController extends Controller
 
             $user = Auth::user();
 
+            $userId = $user->id;
+
             $product = product::find($id);
-            
-            $cart = new cart;
 
-            $cart->name     = $user->name;
+            $product_exit = Cart::where('product_id','=',$id)->where('user_id','=',$userId)->get('id')->first();
 
-            $cart->email    = $user->email;
+            if($product_exit){
 
-            $cart->address  = $user->address;
+                $cart = Cart::find($product_exit)->first();
 
-            $cart->user_id  = $user->id;
+                $quantity = $cart->quantity;
 
+                $cart->quantity = $quantity + $request->quantity;
 
+                if($product->dis_price!=null){
 
-            $cart->title    = $product->title;
+                    $cart->price = $product->dis_price * $cart->quantity;
 
-            if($product->dis_price!=null){
-                $cart->price = $product->dis_price * $request->quantity;
+                }
+
+                else{
+
+                    $cart->price = $product->price * $cart->quantity;
+                    
+                }
+
+                $cart->save();
+
+                return redirect()->back()->with('msg','Product Added Successfully');
+
             }
+
             else{
-                $cart->price = $product->price * $request->quantity;
+
+                $cart = new cart;
+
+                $cart->name     = $user->name;
+
+                $cart->email    = $user->email;
+
+                $cart->address  = $user->address;
+
+                $cart->user_id  = $user->id;
+
+
+
+                $cart->title    = $product->title;
+
+                if($product->dis_price!=null){
+
+                    $cart->price = $product->dis_price * $request->quantity;
+
+                }
+
+                else{
+
+                    $cart->price = $product->price * $request->quantity;
+
+                }
+                
+
+
+                $cart->image = $product->image;
+
+                $cart->product_id = $product->id;
+                
+                $cart->quantity = $request->quantity;
+
+
+
+                $cart->save();
+
+                return redirect()->back()->with('msg','Product Added Successfully');
+
+
             }
+
+            
             
 
-
-            $cart->image = $product->image;
-
-            $cart->product_id = $product->id;
-            
-            $cart->quantity = $request->quantity;
-
-
-
-            $cart->save();
-
-            return redirect()->back();
             }
 
             else{
@@ -304,5 +361,118 @@ class HomeController extends Controller
         return redirect()->back();
 
     }
+
+
+    public function add_comment(Request $request){
+
+
+        if(Auth::id()){
+
+            $comment = new Comment;
+
+            $comment->name = Auth::user()->name;
+            $comment->user_id = Auth::user()->id;
+            $comment->comment = $request->comment;
+
+            $comment->save();
+
+            return redirect()->back();
+
+        }
+
+        else{
+
+
+            return redirect('login');
+
+        }
+
+
+    }
+
+
+    public function add_reply(Request $request){
+
+
+        if(Auth::id()){
+
+            $reply = new Reply;
+
+            $reply->name = Auth::user()->name;
+            $reply->user_id = Auth::user()->id;
+            $reply->comment_id = $request->commentId;
+            $reply->reply = $request->reply;
+
+            $reply->save();
+
+            return redirect()->back();
+
+        }
+
+        else{
+
+            return redirect('login');
+
+        }
+
+
+    }
+
+
+    public function search_product(Request $request){
+
+
+        $searchText = $request->search;
+
+        $comment = Comment::orderby('id','desc')->get();
+
+        $reply = Reply::all();
+
+        
+        $product = Product::where('title','LIKE',"%$searchText%")->orWhere('category','LIKE',"$searchText")->paginate(9);
+
+        return view('home.userpage',compact('product','comment','reply'));
+
+    }
+
+
+
+    public function all_products(){
+
+        $product = Product::paginate(9);
+
+        $comment = Comment::orderby('id','desc')->get();
+
+        $reply = Reply::all();
+
+
+        return view('home.allproduct',compact('product','comment','reply'));
+
+
+    }
+
+
+
+    public function product_search(Request $request){
+
+
+        $searchText = $request->search;
+
+        $comment = Comment::orderby('id','desc')->get();
+
+        $reply = Reply::all();
+
+        
+        $product = Product::where('title','LIKE',"%$searchText%")->orWhere('category','LIKE',"$searchText")->paginate(9);
+
+        return view('home.allproduct',compact('product','comment','reply'));
+
+    }
+
+
+
+
+
+    
 
 }
