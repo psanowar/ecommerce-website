@@ -36,14 +36,14 @@
                            
                            
 
-                           <a class="nav-link" href="{{ url('show_cart') }}">Cart</a>
+                           <!-- <a class="nav-link" href="{{ url('show_cart') }}">Cart</a> -->
 
-                        <!-- @if (Route::has('login'))
+                        @if (Route::has('login'))
 
                         @auth
 
                         <li class="nav-item">
-                           <a class="nav-link" href="{{url('show_cart')}}">Cart [<span>{{App\Models\cart::where('user_id','=',Auth::user()->id)->count()}}]</span></a>
+                           <a class="nav-link" href="{{url('show_cart')}}">Cart[<span>{{App\Models\cart::where('user_id','=',Auth::user()->id)->count()}}]</span></a>
                         </li>
 
                         @else
@@ -55,7 +55,7 @@
                        
                         @endauth
 
-                        @endif -->
+                        @endif
 
 
             
